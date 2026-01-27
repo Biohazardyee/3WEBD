@@ -2,7 +2,7 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getBookByKey } from "../api/openLibrary";
 import { fetchWikipediaData } from "../api/wikipedia";
-import type {WikipediaData} from "../types/wikipedia";
+import type {WikipediaData} from "../types/wikipedia.tsx";
 import * as React from "react";
 import type {OpenLibraryWork} from "../types/openLibrary.tsx";
 

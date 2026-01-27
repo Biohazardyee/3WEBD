@@ -1,5 +1,5 @@
 import axios from "axios";
-import type {OpenLibrarySearchResponse, OpenLibraryWork, RecentChange} from "../types/openLibrary";
+import type { OpenLibrarySearchResponse, OpenLibraryWork, RecentChange } from "../types/openLibrary";
 
 const api = axios.create({
     baseURL: "https://openlibrary.org",
@@ -38,5 +38,6 @@ export const getRecentChanges = async (): Promise<RecentChange[]> => {
     const { data } = await api.get("/recentchanges.json", {
         params: { limit: 10 },
     });
+
     return data;
 };
