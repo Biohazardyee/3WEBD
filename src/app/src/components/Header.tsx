@@ -45,7 +45,7 @@ export function Header() {
             <Book className="w-7 h-7 text-primary-foreground" />
           </div>
             <div>
-              <h1 className="text-4xl text-primary">City Library</h1>
+              <h1 className="text-4xl text-primary">Independant Library</h1>
               <p className="text-sm text-muted-foreground">Public Collection</p>
             </div>
           </Link>
