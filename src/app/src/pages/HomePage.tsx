@@ -1,12 +1,53 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Search, TrendingUp } from 'lucide-react';
-import { mockBooks } from '../data/mockBooks';
-import { BookCard } from '../components/BookCard';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Search, TrendingUp } from "lucide-react";
+import { getRecentBookAdditions, getAuthorByKey } from "../api/openLibrary";
+import type { OpenLibraryWork } from "../types/openLibrary";
+import { BookCard } from "../components/BookCard";
+import { LoadingSpinner } from "../components/LoadingSpinner";
+import placeHolderBook from "../assets/placeholder-book.png";
 
 export function HomePage() {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [recentBooks, setRecentBooks] = useState<OpenLibraryWork[]>([]);
+  const [authorNames, setAuthorNames] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRecentBooks = async () => {
+      setLoading(true);
+      try {
+        const books = await getRecentBookAdditions(6);
+        setRecentBooks(books);
+
+        const authors: Record<string, string> = {};
+
+        for (const book of books) {
+          if (book.authors && book.authors.length > 0) {
+            const authorKey = book.authors[0].author.key;
+            try {
+              const author = await getAuthorByKey(authorKey);
+              authors[book.key] = author.name;
+            } catch (err) {
+              console.error(`Failed to fetch author for ${authorKey}:`, err);
+              authors[book.key] = "Unknown Author";
+            }
+          } else {
+            authors[book.key] = "Unknown Author";
+          }
+        }
+
+        setAuthorNames(authors);
+      } catch (err) {
+        console.error("Error fetching recent books:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRecentBooks();
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -15,10 +56,25 @@ export function HomePage() {
     }
   };
 
-  // Get recent additions (last 6 books based on dateAdded)
-  const recentBooks = [...mockBooks]
-    .sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime())
-    .slice(0, 6);
+  const transformedBooks = recentBooks.map((book) => ({
+    id: book.key,
+    title: book.title,
+    author: authorNames[book.key] || "Loading...",
+    year: 0,
+    coverUrl: book.covers?.[0]
+      ? `https://covers.openlibrary.org/b/id/${book.covers[0]}-M.jpg`
+      : placeHolderBook,
+    description:
+      typeof book.description === "string"
+        ? book.description
+        : book.description?.value || "",
+    subjects: book.subjects?.slice(0, 3) || [],
+    language: "en",
+    isbn: "",
+    pages: 0,
+    publisher: "",
+    dateAdded: book.created?.value || new Date().toISOString(),
+  }));
 
   return (
     <div className="min-h-screen">
@@ -32,7 +88,6 @@ export function HomePage() {
             <p className="text-lg text-muted-foreground mb-8">
               Discover your next great read from our extensive collection
             </p>
-
             {/* Hero Search */}
             <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
               <div className="relative">
@@ -60,17 +115,28 @@ export function HomePage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="flex items-center gap-3 mb-8">
           <TrendingUp className="w-6 h-6 text-primary" />
-          <h2 className="text-3xl">Recent Additions</h2>
+          <h2 className="text-3xl">Recent Changes</h2>
         </div>
         <p className="text-muted-foreground mb-8">
-          Newly added books to our collection
+          Recently updated books from OpenLibrary
         </p>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-          {recentBooks.map((book) => (
-            <BookCard key={book.id} book={book} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <LoadingSpinner />
+          </div>
+        ) : transformedBooks.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+            {transformedBooks.map((book) => (
+              <BookCard key={book.id} book={book} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-center text-muted-foreground py-12">
+            No recent book changes found. The API may not have recent book
+            updates.
+          </p>
+        )}
       </section>
 
       {/* Statistics */}

@@ -4,6 +4,7 @@ import { getBookByKey, getAuthorByKey } from "../api/openLibrary";
 import type { OpenLibraryAuthor } from "../types/openLibrary";
 import type { OpenLibraryWork } from "../types/openLibrary";
 import { LoadingSpinner } from "../components/LoadingSpinner";
+import placeHolderBook from "../assets/placeholder-book.png";
 import {
   Calendar,
   User,
@@ -116,7 +117,7 @@ export function BookDetailPage() {
   // Get cover URL from covers array
   const coverUrl = book.covers?.[0]
     ? `https://covers.openlibrary.org/b/id/${book.covers[0]}-L.jpg`
-    : "/placeholder-book.png";
+    : placeHolderBook;
 
   // Get first author name
   const authorKey = book.authors?.[0]?.author?.key;
@@ -143,7 +144,7 @@ export function BookDetailPage() {
                   alt={book.title}
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    e.currentTarget.src = "/placeholder-book.png";
+                    e.currentTarget.src = placeHolderBook;
                   }}
                 />
               </div>
