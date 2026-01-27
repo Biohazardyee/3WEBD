@@ -15,7 +15,7 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/advanced-search" element={<AdvancedSearchPage />} />
         <Route path="/search" element={<SearchResultsPage />} />
-        <Route path="/book/:id" element={<BookDetailPage />} />
+        <Route path="/book/*" element={<BookDetailPage />} />
         <Route path="/about" element={<AboutPage />} />
       </Routes>
       <Footer />

@@ -76,18 +76,10 @@ export function HomePage() {
       {/* Statistics */}
       <section className="bg-secondary">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-8 text-center">
             <div className="bg-card rounded-xl p-8 shadow-sm">
               <div className="text-4xl text-primary mb-2">50,000+</div>
               <div className="text-muted-foreground">Books in Collection</div>
-            </div>
-            <div className="bg-card rounded-xl p-8 shadow-sm">
-              <div className="text-4xl text-primary mb-2">15,000+</div>
-              <div className="text-muted-foreground">Active Members</div>
-            </div>
-            <div className="bg-card rounded-xl p-8 shadow-sm">
-              <div className="text-4xl text-primary mb-2">130+</div>
-              <div className="text-muted-foreground">Years of Service</div>
             </div>
           </div>
         </div>

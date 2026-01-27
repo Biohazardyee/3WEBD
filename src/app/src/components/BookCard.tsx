@@ -7,32 +7,21 @@ interface BookCardProps {
 }
 
 export function BookCard({ book }: BookCardProps) {
+  const bookPath = book.id.startsWith("/") ? book.id.slice(1) : book.id;
+
   return (
-    <Link
-      to={`/book/${book.id}`}
-      className="group bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
-    >
-      <div className="aspect-[2/3] overflow-hidden bg-muted">
+    <Link to={`/book/${bookPath}`} className="group block">
+      <div className="aspect-[2/3] rounded-lg overflow-hidden shadow-md bg-muted mb-3">
         <img
           src={book.coverUrl}
           alt={book.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          loading="lazy"
         />
       </div>
-      <div className="p-4 space-y-2">
-        <h3 className="text-base leading-snug group-hover:text-primary transition-colors line-clamp-2">
-          {book.title}
-        </h3>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <User className="w-3.5 h-3.5" />
-          <span className="truncate">{book.author}</span>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Calendar className="w-3.5 h-3.5" />
-          <span>{book.year}</span>
-        </div>
-      </div>
+      <h3 className="text-sm mb-1 line-clamp-2 group-hover:text-primary transition-colors">
+        {book.title}
+      </h3>
+      <p className="text-xs text-muted-foreground">{book.author}</p>
     </Link>
   );
 }

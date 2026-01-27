@@ -15,6 +15,15 @@ export interface OpenLibraryAuthorRef {
   };
 }
 
+export interface OpenLibraryAuthor {
+  key: string;
+  name: string;
+  bio?: string | { value: string };
+  birth_date?: string;
+  death_date?: string;
+  photos?: number[];
+}
+
 export interface OpenLibraryWork {
   key: string;
   title: string;
