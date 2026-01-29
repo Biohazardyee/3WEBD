@@ -1,247 +1,327 @@
-import { useState, useEffect } from "react";
-import { useSearchParams, useLocation } from "react-router-dom";
-import { searchBooks, advancedSearch } from "../api/openLibrary";
+import { useEffect, useState } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { BookCard } from "../components/BookCard";
 import { LoadingSpinner } from "../components/LoadingSpinner";
-import { AlertCircle, Filter } from "lucide-react";
-import type { OpenLibrarySearchResponse } from "../types/openLibrary";
+import { searchBooks, advancedSearch } from "../api/openLibrary";
+import type { Book } from "../types/openLibrary";
+import { AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import placeholderBook from "../assets/placeholder-book.png";
 
 export function SearchResultsPage() {
   const [searchParams] = useSearchParams();
-  const location = useLocation();
+  const navigate = useNavigate();
+  const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
-  const [results, setResults] = useState<OpenLibrarySearchResponse | null>(
-    null,
-  );
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
-  const RESULTS_PER_PAGE = 100;
+  const [totalResults, setTotalResults] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const resultsPerPage = 20;
 
   useEffect(() => {
-    const fetchResults = async () => {
+    const fetchBooks = async () => {
       setLoading(true);
       setError(null);
 
       try {
-        if (location.state?.results && page === 1) {
-          setResults(location.state.results);
-          setLoading(false);
-          return;
-        }
-
-        const query = searchParams.get("q");
+        // Check if it's a simple search or advanced search
+        const quickQuery = searchParams.get("q");
         const title = searchParams.get("title");
         const author = searchParams.get("author");
-        const yearFrom = searchParams.get("yearFrom");
-        const yearTo = searchParams.get("yearTo");
         const subject = searchParams.get("subject");
         const language = searchParams.get("language");
+        const yearFrom = searchParams.get("yearFrom");
+        const yearTo = searchParams.get("yearTo");
+        const page = parseInt(searchParams.get("page") || "1");
 
-        let apiResults: OpenLibrarySearchResponse;
+        setCurrentPage(page);
 
-        if (query) {
-          apiResults = await searchBooks(query, page, RESULTS_PER_PAGE);
-        } else if (
-          title ||
-          author ||
-          yearFrom ||
-          yearTo ||
-          subject ||
-          language
-        ) {
+        let results;
+
+        // Simple quick search
+        if (quickQuery) {
+          results = await searchBooks(quickQuery, page, resultsPerPage);
+        }
+        // Advanced search
+        else if (title || author || subject || language) {
           const params: Record<string, string> = {};
 
           if (title) params.title = title;
           if (author) params.author = author;
           if (subject) params.subject = subject;
-          if (language && language !== "all") params.language = language;
+          if (language) params.language = language;
 
-          if (yearFrom && yearTo) {
-            params.publish_year = `${yearFrom}-${yearTo}`;
-          } else if (yearFrom) {
-            params.publish_year = `${yearFrom}-${new Date().getFullYear()}`;
-          } else if (yearTo) {
-            params.publish_year = `0-${yearTo}`;
-          }
-
-          apiResults = await advancedSearch(params, page, RESULTS_PER_PAGE);
+          results = await advancedSearch(params, page, resultsPerPage);
         } else {
-          setResults(null);
+          setError("No search parameters provided");
           setLoading(false);
           return;
         }
 
-        setResults(apiResults);
+        if (!results || !results.docs) {
+          setError("No results found");
+          setBooks([]);
+          setTotalResults(0);
+          setLoading(false);
+          return;
+        }
+
+        // Filter by year range if specified
+        let filteredDocs = results.docs;
+        if (yearFrom || yearTo) {
+          const fromYear = yearFrom ? parseInt(yearFrom) : 0;
+          const toYear = yearTo ? parseInt(yearTo) : 9999;
+
+          filteredDocs = results.docs.filter((doc: any) => {
+            const bookYear = doc.first_publish_year;
+            if (!bookYear) return false;
+            return bookYear >= fromYear && bookYear <= toYear;
+          });
+
+          console.log(
+            `Filtered from ${results.docs.length} to ${filteredDocs.length} books based on year range`,
+          );
+        }
+
+        // Transform to Book format
+        const transformedBooks: Book[] = filteredDocs.map((doc: any) => ({
+          id: doc.key,
+          title: doc.title || "Unknown Title",
+          author: doc.author_name?.[0] || "Unknown Author",
+          year: doc.first_publish_year || 0,
+          coverUrl: doc.cover_i
+            ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg`
+            : placeholderBook,
+          description: "",
+          subjects: doc.subject?.slice(0, 3) || [],
+          language: doc.language?.[0] || "en",
+          isbn: doc.isbn?.[0] || "",
+          pages: doc.number_of_pages_median || 0,
+          publisher: doc.publisher?.[0] || "",
+          dateAdded: new Date().toISOString(),
+        }));
+
+        setBooks(transformedBooks);
+        setTotalResults(results.numFound);
       } catch (err) {
         console.error("Search error:", err);
         setError(
-          err instanceof Error ? err.message : "Failed to fetch results",
+          err instanceof Error ? err.message : "Failed to fetch search results",
         );
+        setBooks([]);
+        setTotalResults(0);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchResults();
-  }, [searchParams, location.state, page]);
+    fetchBooks();
+  }, [searchParams]);
 
-  // Get active filters for display
-  const getActiveFilters = () => {
-    const filters: { key: string; value: string }[] = [];
-    searchParams.forEach((value, key) => {
-      if (value && value !== "all") {
-        filters.push({ key, value });
-      }
-    });
-    return filters;
+  // Get search summary for display
+  const getSearchSummary = () => {
+    const quickQuery = searchParams.get("q");
+    if (quickQuery) return `Results for "${quickQuery}"`;
+
+    const parts: string[] = [];
+    const title = searchParams.get("title");
+    const author = searchParams.get("author");
+    const subject = searchParams.get("subject");
+    const yearFrom = searchParams.get("yearFrom");
+    const yearTo = searchParams.get("yearTo");
+
+    if (title) parts.push(`Title: "${title}"`);
+    if (author) parts.push(`Author: "${author}"`);
+    if (subject) parts.push(`Subject: "${subject}"`);
+    if (yearFrom || yearTo) {
+      const range =
+        yearFrom && yearTo
+          ? `${yearFrom}-${yearTo}`
+          : yearFrom
+            ? `from ${yearFrom}`
+            : `until ${yearTo}`;
+      parts.push(`Years: ${range}`);
+    }
+
+    return parts.length > 0
+      ? `Search filters: ${parts.join(", ")}`
+      : "Search Results";
   };
 
-  const activeFilters = getActiveFilters();
+  const handlePageChange = (newPage: number) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("page", newPage.toString());
+    navigate(`/search?${params.toString()}`);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
-  const transformedBooks =
-    results?.docs?.map((doc) => ({
-      id: doc.key,
-      title: doc.title,
-      author: doc.author_name?.[0] || "Unknown Author",
-      year: doc.first_publish_year || 0,
-      coverUrl:
-        doc.cover_i === undefined
-          ? placeholderBook
-          : `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg`,
-      description: "",
-      subjects: [],
-      language: doc.language?.[0] || "en",
-      isbn: "",
-      pages: 0,
-      publisher: "",
-      dateAdded: new Date().toISOString(),
-    })) || [];
+  const totalPages = Math.ceil(totalResults / resultsPerPage);
+  const hasNextPage = currentPage < totalPages;
+  const hasPrevPage = currentPage > 1;
 
-  const totalPages = results
-    ? Math.ceil(results.numFound / RESULTS_PER_PAGE)
-    : 0;
+  // Generate page numbers to display
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    const maxVisible = 7;
+
+    if (totalPages <= maxVisible) {
+      // Show all pages
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Show first page
+      pages.push(1);
+
+      if (currentPage > 3) {
+        pages.push("...");
+      }
+
+      // Show pages around current page
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+
+      if (currentPage < totalPages - 2) {
+        pages.push("...");
+      }
+
+      // Show last page
+      pages.push(totalPages);
+    }
+
+    return pages;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 flex items-start gap-3">
+            <AlertCircle className="w-6 h-6 text-red-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <h3 className="text-lg font-semibold text-red-900 mb-2">
+                Search Error
+              </h3>
+              <p className="text-red-800">{error}</p>
+              <button
+                onClick={() => window.history.back()}
+                className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Go Back
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl mb-3">Search Results</h1>
-
-          {/* Active Filters */}
-          {activeFilters.length > 0 && (
-            <div className="flex items-center gap-2 flex-wrap mt-4">
-              <Filter className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">
-                Active filters:
-              </span>
-              {activeFilters.map((filter, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
-                >
-                  <span className="capitalize">{filter.key}:</span>
-                  <span>{filter.value}</span>
-                </span>
-              ))}
-            </div>
-          )}
+          <h1 className="text-4xl mb-3">{getSearchSummary()}</h1>
+          <p className="text-muted-foreground">
+            {totalResults === 0
+              ? "No books found matching your criteria"
+              : `Found ${totalResults.toLocaleString()} ${totalResults === 1 ? "book" : "books"} - Page ${currentPage} of ${totalPages}`}
+          </p>
         </div>
 
-        {loading ? (
-          <LoadingSpinner />
-        ) : error ? (
-          /* Error State */
-          <div className="text-center py-16">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-destructive/10 rounded-full mb-4">
-              <AlertCircle className="w-8 h-8 text-destructive" />
-            </div>
-            <h2 className="text-2xl mb-2">Error loading results</h2>
-            <p className="text-muted-foreground mb-6">{error}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
-            >
-              Try Again
-            </button>
-          </div>
-        ) : !results || transformedBooks.length === 0 ? (
-          /* No Results */
-          <div className="text-center py-16">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-muted rounded-full mb-4">
-              <AlertCircle className="w-8 h-8 text-muted-foreground" />
-            </div>
-            <h2 className="text-2xl mb-2">No results found</h2>
-            <p className="text-muted-foreground mb-6">
-              Try adjusting your search criteria or filters
-            </p>
-          </div>
-        ) : (
+        {books.length > 0 ? (
           <>
-            {/* Results Count */}
-            <p className="text-muted-foreground mb-6">
-              Found{" "}
-              <span className="text-foreground">
-                {results.numFound?.toLocaleString()}
-              </span>{" "}
-              {results.numFound === 1 ? "book" : "books"}
-              {transformedBooks.length < (results.numFound || 0) && (
-                <span> (showing {transformedBooks.length})</span>
-              )}
-            </p>
-
-            {/* Results Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
-              {transformedBooks.map((book) => (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+              {books.map((book) => (
                 <BookCard key={book.id} book={book} />
               ))}
             </div>
 
-            {/* Pagination Placeholder */}
+            {/* Pagination */}
             {totalPages > 1 && (
-              <div className="mt-12 flex justify-center items-center gap-2 flex-wrap">
-                {/* Previous */}
+              <div className="mt-12 flex items-center justify-center gap-2">
+                {/* Previous button */}
                 <button
-                  disabled={page === 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  className="px-4 py-2 border border-input rounded-lg hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={!hasPrevPage}
+                  className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
+                    hasPrevPage
+                      ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                      : "bg-secondary text-muted-foreground cursor-not-allowed"
+                  }`}
                 >
+                  <ChevronLeft className="w-4 h-4" />
                   Previous
                 </button>
 
-                {/* Page numbers (max 5 affichées) */}
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const pageNumber = page <= 3 ? i + 1 : page - 2 + i;
+                {/* Page numbers */}
+                <div className="flex gap-2">
+                  {getPageNumbers().map((pageNum, idx) => {
+                    if (pageNum === "...") {
+                      return (
+                        <span
+                          key={`ellipsis-${idx}`}
+                          className="px-4 py-2 text-muted-foreground"
+                        >
+                          ...
+                        </span>
+                      );
+                    }
 
-                  if (pageNumber > totalPages) return null;
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => handlePageChange(pageNum as number)}
+                        className={`px-4 py-2 rounded-lg transition-colors ${
+                          currentPage === pageNum
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-secondary hover:bg-secondary/80"
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
 
-                  return (
-                    <button
-                      key={pageNumber}
-                      onClick={() => setPage(pageNumber)}
-                      className={`px-4 py-2 rounded-lg ${
-                        page === pageNumber
-                          ? "bg-primary text-primary-foreground"
-                          : "border border-input hover:bg-secondary"
-                      }`}
-                    >
-                      {pageNumber}
-                    </button>
-                  );
-                })}
-
-                {/* Next */}
+                {/* Next button */}
                 <button
-                  disabled={page === totalPages}
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  className="px-4 py-2 border border-input rounded-lg hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={!hasNextPage}
+                  className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
+                    hasNextPage
+                      ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                      : "bg-secondary text-muted-foreground cursor-not-allowed"
+                  }`}
                 >
                   Next
+                  <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
             )}
           </>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-lg text-muted-foreground mb-4">
+              No books found matching your search criteria
+            </p>
+            <button
+              onClick={() => window.history.back()}
+              className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              Try Different Search
+            </button>
+          </div>
         )}
       </div>
     </div>

@@ -15,6 +15,21 @@ export interface OpenLibraryAuthorRef {
   };
 }
 
+export interface Book {
+  id: string;
+  title: string;
+  author: string;
+  year: number;
+  coverUrl: string;
+  description: string;
+  subjects: string[];
+  language: string;
+  isbn: string;
+  pages: number;
+  publisher: string;
+  dateAdded: string;
+}
+
 export interface OpenLibraryAuthor {
   key: string;
   name: string;
@@ -27,7 +42,7 @@ export interface OpenLibraryAuthor {
 export interface OpenLibraryWork {
   key: string;
   title: string;
-  description?: string | { value: string }; 
+  description?: string | { value: string };
   covers?: number[];
   authors?: OpenLibraryAuthorRef[];
   subjects?: string[];
@@ -36,18 +51,18 @@ export interface OpenLibraryWork {
 }
 
 export interface OpenLibrarySearchDoc {
-    key: string;
-    title: string;
-    author_name?: string[];
-    first_publish_year?: number;
-    cover_i?: number;
-    language?: string[];
+  key: string;
+  title: string;
+  author_name?: string[];
+  first_publish_year?: number;
+  cover_i?: number;
+  language?: string[];
 }
 
 export interface OpenLibrarySearchResponse {
-    numFound: number;
-    start: number;
-    docs: OpenLibrarySearchDoc[];
+  numFound: number;
+  start: number;
+  docs: OpenLibrarySearchDoc[];
 }
 
 export interface RecentChange {
