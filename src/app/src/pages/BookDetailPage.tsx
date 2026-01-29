@@ -335,6 +335,28 @@ export function BookDetailPage() {
               </p>
             </div>
 
+            {/* Subjects */}
+            {book.subjects && book.subjects.length > 0 && (
+              <div className="bg-secondary rounded-xl p-6">
+                <h3 className="text-lg mb-4">Subjects & Categories</h3>
+                <div className="flex flex-wrap gap-2">
+                  {book.subjects.slice(0, 20).map((subject, index) => (
+                    <span
+                      key={index}
+                      className="px-4 py-2 bg-card rounded-lg border border-border text-sm hover:bg-card/80 transition-colors"
+                    >
+                      {subject}
+                    </span>
+                  ))}
+                  {book.subjects.length > 20 && (
+                    <span className="px-4 py-2 text-muted-foreground text-sm">
+                      +{book.subjects.length - 20} more
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Wikipedia Integration - Book (FR5) */}
             <div>
               <h2 className="text-2xl mb-4">Wikipedia - Book Information</h2>
@@ -356,28 +378,6 @@ export function BookDetailPage() {
                   loading={wikipediaLoading}
                   type="author"
                 />
-              </div>
-            )}
-
-            {/* Subjects */}
-            {book.subjects && book.subjects.length > 0 && (
-              <div className="bg-secondary rounded-xl p-6">
-                <h3 className="text-lg mb-4">Subjects & Categories</h3>
-                <div className="flex flex-wrap gap-2">
-                  {book.subjects.slice(0, 20).map((subject, index) => (
-                    <span
-                      key={index}
-                      className="px-4 py-2 bg-card rounded-lg border border-border text-sm hover:bg-card/80 transition-colors"
-                    >
-                      {subject}
-                    </span>
-                  ))}
-                  {book.subjects.length > 20 && (
-                    <span className="px-4 py-2 text-muted-foreground text-sm">
-                      +{book.subjects.length - 20} more
-                    </span>
-                  )}
-                </div>
               </div>
             )}
 

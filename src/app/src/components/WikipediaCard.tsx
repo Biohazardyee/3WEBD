@@ -1,5 +1,5 @@
 import { ExternalLink, BookOpen, AlertCircle } from "lucide-react";
-import type { WikipediaData, WikipediaCardProps } from "../types/wikipedia";
+import type { WikipediaCardProps } from "../types/wikipedia";
 
 
 

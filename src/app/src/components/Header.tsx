@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Search, Book, Loader } from "lucide-react";
+import { Search, BookOpen, Loader } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { searchBooks } from "../api/openLibrary";
@@ -42,7 +42,7 @@ export function Header() {
             className="flex items-center gap-3 hover:opacity-80 transition-opacity"
           >
           <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center">
-            <Book className="w-7 h-7 text-primary-foreground" />
+            <BookOpen className="w-7 h-7 text-primary-foreground" />
           </div>
             <div>
               <h1 className="text-4xl text-primary">Independant Library</h1>
