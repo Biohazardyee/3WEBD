@@ -5,7 +5,6 @@ import { HomePage } from "./pages/HomePage";
 import { AdvancedSearchPage } from "./pages/AdvancedSearchPage";
 import { SearchResultsPage } from "./pages/SearchResultPage";
 import { BookDetailPage } from "./pages/BookDetailPage";
-import { AboutPage } from "./pages/AboutPage";
 
 export default function App() {
   return (
@@ -16,7 +15,6 @@ export default function App() {
         <Route path="/advanced-search" element={<AdvancedSearchPage />} />
         <Route path="/search" element={<SearchResultsPage />} />
         <Route path="/book/*" element={<BookDetailPage />} />
-        <Route path="/about" element={<AboutPage />} />
       </Routes>
       <Footer />
     </>

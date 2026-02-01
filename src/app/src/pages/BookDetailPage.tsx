@@ -53,10 +53,8 @@ export function BookDetailPage() {
       setError(null);
 
       try {
-        // Add leading slash if not present
         const key = bookPath.startsWith("/") ? bookPath : `/${bookPath}`;
 
-        // Validate key format
         if (!key.match(/^\/works\/OL\d+W$/)) {
           throw new Error("Invalid book ID format");
         }
@@ -69,13 +67,11 @@ export function BookDetailPage() {
 
         setBook(bookData);
 
-        // Try to get publication year from created date
         if (bookData.created?.value) {
           const year = new Date(bookData.created.value).getFullYear();
           setPublicationYear(year);
         }
 
-        // Fetch author information if available
         let authorData: OpenLibraryAuthor | null = null;
         if (bookData.authors && bookData.authors.length > 0) {
           const authorKey = bookData.authors[0].author.key;
@@ -87,17 +83,14 @@ export function BookDetailPage() {
           }
         }
 
-        // Fetch Wikipedia data (FR5)
         setWikipediaLoading(true);
         try {
-          // Fetch Wikipedia data for book
           const wikiBook = await fetchWikipediaDataForBook(
             bookData.title,
             authorData?.name,
           );
           setWikipediaBook(wikiBook);
 
-          // Fetch Wikipedia data for author
           if (authorData?.name) {
             const wikiAuthor = await fetchWikipediaDataForAuthor(
               authorData.name,
@@ -195,18 +188,15 @@ export function BookDetailPage() {
     );
   }
 
-  // Extract description
   const description =
     typeof book.description === "string"
       ? book.description
       : book.description?.value || "No description available for this book.";
 
-  // Get cover URL
   const coverUrl = book.covers?.[0]
     ? `https://covers.openlibrary.org/b/id/${book.covers[0]}-L.jpg`
     : placeHolderBook;
 
-  // Get author info
   const authorKey = book.authors?.[0]?.author?.key;
   const authorName = author?.name || "Unknown Author";
 
@@ -456,36 +446,14 @@ export function BookDetailPage() {
 
               <div className="flex flex-wrap gap-3">
                 <a
-                  href={`https://openlibrary.org${book.key}`}
+                  href={`https://www.google.com/search?q=${encodeURIComponent(book.title + " " + authorName + " book")}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm"
                 >
-                  OpenLibrary
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-
-                <a
-                  href={`https://www.google.com/search?q=${encodeURIComponent(book.title + " " + authorName + " book")}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 border border-input rounded-lg hover:bg-secondary transition-colors text-sm"
-                >
                   Google Search
                   <ExternalLink className="w-3 h-3" />
                 </a>
-
-                {wikipediaBook?.url && (
-                  <a
-                    href={wikipediaBook.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 border border-input rounded-lg hover:bg-secondary transition-colors text-sm"
-                  >
-                    Wikipedia (Book)
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                )}
 
                 {authorKey && (
                   <a

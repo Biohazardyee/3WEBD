@@ -15,7 +15,7 @@ export function AdvancedSearchPage() {
   const [error, setError] = useState("");
 
   const validateFilters = () => {
-    // Check if at least one field is filled
+
     const hasAnyFilter =
       filters.title ||
       filters.author ||
@@ -29,7 +29,6 @@ export function AdvancedSearchPage() {
       return false;
     }
 
-    // Validate year range
     if (filters.yearFrom && filters.yearTo) {
       const from = parseInt(filters.yearFrom);
       const to = parseInt(filters.yearTo);
@@ -40,7 +39,6 @@ export function AdvancedSearchPage() {
       }
     }
 
-    // Validate individual years
     const currentYear = new Date().getFullYear();
     if (filters.yearFrom) {
       const from = parseInt(filters.yearFrom);
@@ -68,30 +66,24 @@ export function AdvancedSearchPage() {
       return;
     }
 
-    // Build query params for OpenLibrary API format
     const params = new URLSearchParams();
 
-    // Add title
     if (filters.title.trim()) {
       params.append("title", filters.title.trim());
     }
 
-    // Add author
     if (filters.author.trim()) {
       params.append("author", filters.author.trim());
     }
 
-    // Add subject
     if (filters.subject.trim()) {
       params.append("subject", filters.subject.trim());
     }
 
-    // Add language
     if (filters.language && filters.language !== "all") {
       params.append("language", filters.language);
     }
 
-    // For year range, we'll pass both and handle in SearchResultsPage
     if (filters.yearFrom) {
       params.append("yearFrom", filters.yearFrom);
     }

@@ -94,16 +94,6 @@ export function Header() {
             >
               Advanced Search
             </Link>
-            <Link
-              to="/about"
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                location.pathname === "/about"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-foreground hover:bg-secondary"
-              }`}
-            >
-              About
-            </Link>
           </nav>
         </div>
 
