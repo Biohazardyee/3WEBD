@@ -1,8 +1,7 @@
 import axios from "axios";
 import type {
-    OpenLibrarySearchResponse,
     OpenLibraryWork,
-    OpenLibraryAuthor,
+    OpenLibraryAuthor, OpenLibrarySearchResponse,
 } from "../types/openLibrary";
 
 const api = axios.create({
@@ -10,8 +9,7 @@ const api = axios.create({
     timeout: 10000,
 });
 
-// Simple search by query
-export async function searchBooks(query: string, page = 1, limit = 100) {
+export async function searchBooks(query: string, page = 1, limit = 100): Promise<OpenLibrarySearchResponse> {
     if (!query || query.trim().length === 0) {
         throw new Error("Search query cannot be empty");
     }
@@ -29,25 +27,22 @@ export async function searchBooks(query: string, page = 1, limit = 100) {
     return response.json();
 }
 
-// Advanced search with multiple parameters
 export async function advancedSearch(
     params: Record<string, string>,
     page = 1,
     limit = 100,
-) {
-    // Validate that at least one parameter is provided
+): Promise<OpenLibrarySearchResponse> {
+
     const hasValidParam = Object.values(params).some(value => value && value.trim().length > 0);
     if (!hasValidParam) {
         throw new Error("At least one search parameter is required");
     }
 
-    // Build query parameters
     const queryParams: Record<string, string> = {
         page: page.toString(),
         limit: limit.toString(),
     };
 
-    // Add each parameter if present and not empty
     if (params.title?.trim()) {
         queryParams.title = params.title.trim();
     }
@@ -80,7 +75,6 @@ export async function advancedSearch(
     return response.json();
 }
 
-// Get book by OpenLibrary key
 export const getBookByKey = async (key: string): Promise<OpenLibraryWork> => {
     if (!key || key.trim().length === 0) {
         throw new Error("Invalid book key");
@@ -90,7 +84,6 @@ export const getBookByKey = async (key: string): Promise<OpenLibraryWork> => {
     return data;
 };
 
-// Get author by OpenLibrary key
 export const getAuthorByKey = async (
     key: string,
 ): Promise<OpenLibraryAuthor> => {
@@ -102,7 +95,6 @@ export const getAuthorByKey = async (
     return data;
 };
 
-// Get recent book additions from recent changes
 export const getRecentBookAdditions = async (limit = 6) => {
     try {
         const { data } = await api.get("/recentchanges.json", {
@@ -111,9 +103,6 @@ export const getRecentBookAdditions = async (limit = 6) => {
 
         const changes = data as any[];
 
-        console.log(`Fetched ${changes.length} recent changes`);
-
-        // Filter for changes that involve works (books)
         const bookChanges = changes.filter((change) => {
             return (
                 change.changes &&
@@ -121,9 +110,6 @@ export const getRecentBookAdditions = async (limit = 6) => {
             );
         });
 
-        console.log(`Found ${bookChanges.length} book changes`);
-
-        // Extract unique work keys
         const workKeys = new Set<string>();
         bookChanges.forEach((change) => {
             change.changes?.forEach((c: any) => {
@@ -133,9 +119,6 @@ export const getRecentBookAdditions = async (limit = 6) => {
             });
         });
 
-        console.log(`Found ${workKeys.size} unique work keys`);
-
-        // Fetch book details for each work
         const books: OpenLibraryWork[] = [];
         const keysArray = Array.from(workKeys);
 
@@ -155,9 +138,7 @@ export const getRecentBookAdditions = async (limit = 6) => {
             }
         }
 
-        // If we don't have enough books, try with more changes
         if (books.length < limit) {
-            console.log(`Only got ${books.length} books, fetching more changes...`);
 
             const { data: moreData } = await api.get("/recentchanges.json", {
                 params: { limit: 500 },
@@ -190,8 +171,6 @@ export const getRecentBookAdditions = async (limit = 6) => {
                 }
             }
         }
-
-        console.log(`Successfully fetched ${books.length} books`);
         return books.slice(0, limit);
     } catch (err) {
         console.error("Error fetching recent book additions:", err);

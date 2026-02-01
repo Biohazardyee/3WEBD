@@ -1,8 +1,6 @@
 import { ExternalLink, BookOpen, AlertCircle } from "lucide-react";
 import type { WikipediaCardProps } from "../types/wikipedia";
 
-
-
 export function WikipediaCard({ data, loading = false, type = "book" }: WikipediaCardProps) {
   if (loading) {
     return (

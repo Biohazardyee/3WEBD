@@ -1,7 +1,6 @@
 import axios from "axios";
 import type { WikipediaData, WikipediaApiResponse } from "../types/wikipedia";
 
-
 export const fetchWikipediaData = async (
   title: string
 ): Promise<WikipediaData | null> => {
@@ -24,7 +23,6 @@ export const fetchWikipediaData = async (
       }
     );
 
-    // Check if page exists (Wikipedia API returns 404 for missing pages)
     if (!data || !data.extract) {
       console.log(`Wikipedia: No page found for "${cleanTitle}"`);
       return null;
@@ -57,24 +55,20 @@ export const fetchWikipediaDataForBook = async (
 ): Promise<WikipediaData | null> => {
   if (!bookTitle) return null;
 
-  // Strategy 1: Try exact book title
   let result = await fetchWikipediaData(bookTitle);
   if (result) return result;
 
-  // Strategy 2: Try "BookTitle (novel)" or "BookTitle (book)"
   result = await fetchWikipediaData(`${bookTitle} (novel)`);
   if (result) return result;
 
   result = await fetchWikipediaData(`${bookTitle} (book)`);
   if (result) return result;
 
-  // Strategy 3: Try with author name if available
   if (authorName) {
     result = await fetchWikipediaData(`${bookTitle} (${authorName})`);
     if (result) return result;
   }
 
-  console.log(`Wikipedia: No page found for book "${bookTitle}"`);
   return null;
 };
 
@@ -83,7 +77,6 @@ export const fetchWikipediaDataForAuthor = async (
 ): Promise<WikipediaData | null> => {
   if (!authorName) return null;
 
-  // Try exact author name
   const result = await fetchWikipediaData(authorName);
   
   if (!result) {

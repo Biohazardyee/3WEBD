@@ -23,7 +23,6 @@ export function SearchResultsPage() {
       setError(null);
 
       try {
-        // Check if it's a simple search or advanced search
         const quickQuery = searchParams.get("q");
         const title = searchParams.get("title");
         const author = searchParams.get("author");
@@ -37,11 +36,9 @@ export function SearchResultsPage() {
 
         let results;
 
-        // Simple quick search
         if (quickQuery) {
           results = await searchBooks(quickQuery, page, resultsPerPage);
         }
-        // Advanced search
         else if (title || author || subject || language) {
           const params: Record<string, string> = {};
 
@@ -65,7 +62,6 @@ export function SearchResultsPage() {
           return;
         }
 
-        // Filter by year range if specified
         let filteredDocs = results.docs;
         if (yearFrom || yearTo) {
           const fromYear = yearFrom ? parseInt(yearFrom) : 0;
@@ -76,13 +72,8 @@ export function SearchResultsPage() {
             if (!bookYear) return false;
             return bookYear >= fromYear && bookYear <= toYear;
           });
-
-          console.log(
-            `Filtered from ${results.docs.length} to ${filteredDocs.length} books based on year range`,
-          );
         }
 
-        // Transform to Book format
         const transformedBooks: Book[] = filteredDocs.map((doc: any) => ({
           id: doc.key,
           title: doc.title || "Unknown Title",
@@ -117,7 +108,6 @@ export function SearchResultsPage() {
     fetchBooks();
   }, [searchParams]);
 
-  // Get search summary for display
   const getSearchSummary = () => {
     const quickQuery = searchParams.get("q");
     if (quickQuery) return `Results for "${quickQuery}"`;
@@ -158,25 +148,21 @@ export function SearchResultsPage() {
   const hasNextPage = currentPage < totalPages;
   const hasPrevPage = currentPage > 1;
 
-  // Generate page numbers to display
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
     const maxVisible = 7;
 
     if (totalPages <= maxVisible) {
-      // Show all pages
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
       }
     } else {
-      // Show first page
       pages.push(1);
 
       if (currentPage > 3) {
         pages.push("...");
       }
 
-      // Show pages around current page
       const start = Math.max(2, currentPage - 1);
       const end = Math.min(totalPages - 1, currentPage + 1);
 
@@ -188,7 +174,6 @@ export function SearchResultsPage() {
         pages.push("...");
       }
 
-      // Show last page
       pages.push(totalPages);
     }
 

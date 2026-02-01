@@ -32,7 +32,6 @@ export function BookDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [publicationYear, setPublicationYear] = useState<number | null>(null);
 
-  // Wikipedia data states
   const [wikipediaBook, setWikipediaBook] = useState<WikipediaData | null>(
     null,
   );

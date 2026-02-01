@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import type { Book } from "../data/mockBooks";
-import { Calendar, User } from "lucide-react";
 
 interface BookCardProps {
   book: Book;
