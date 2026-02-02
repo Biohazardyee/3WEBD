@@ -62,3 +62,7 @@ npm install
 ```bash
 npm run dev
 ```
+
+### Test
+
+npx cypress run --record --key 78d1bdf8-2449-4aae-aa7a-e1e17f72b0cf

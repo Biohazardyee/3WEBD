@@ -5,7 +5,6 @@ import { LoadingSpinner } from "../components/LoadingSpinner";
 import { searchBooks, advancedSearch } from "../api/openLibrary";
 import type { Book } from "../types/openLibrary";
 import { AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
-import placeholderBook from "../assets/placeholder-book.png";
 
 export function SearchResultsPage() {
   const [searchParams] = useSearchParams();
@@ -35,11 +34,21 @@ export function SearchResultsPage() {
         setCurrentPage(page);
 
         let results;
+        let isYearOnlySearch = false;
 
-        if (quickQuery) {
+        if (
+          !quickQuery &&
+          !title &&
+          !author &&
+          !subject &&
+          (yearFrom || yearTo)
+        ) {
+          isYearOnlySearch = true;
+
+          results = await searchBooks("*", page, 100);
+        } else if (quickQuery) {
           results = await searchBooks(quickQuery, page, resultsPerPage);
-        }
-        else if (title || author || subject || language) {
+        } else if (title || author || subject || language) {
           const params: Record<string, string> = {};
 
           if (title) params.title = title;
@@ -62,6 +71,7 @@ export function SearchResultsPage() {
           return;
         }
 
+        // Filter by year range if specified
         let filteredDocs = results.docs;
         if (yearFrom || yearTo) {
           const fromYear = yearFrom ? parseInt(yearFrom) : 0;
@@ -74,6 +84,21 @@ export function SearchResultsPage() {
           });
         }
 
+        // If we have no results after filtering and it's a year-only search, try getting more
+        if (filteredDocs.length === 0 && isYearOnlySearch && page === 1) {
+          console.log("No books found in year range, trying broader search...");
+          results = await searchBooks("the", 1, 100); // Common word to get results
+
+          const fromYear = yearFrom ? parseInt(yearFrom) : 0;
+          const toYear = yearTo ? parseInt(yearTo) : 9999;
+
+          filteredDocs = results.docs.filter((doc: any) => {
+            const bookYear = doc.first_publish_year;
+            return bookYear && bookYear >= fromYear && bookYear <= toYear;
+          });
+        }
+
+        // Transform to Book format
         const transformedBooks: Book[] = filteredDocs.map((doc: any) => ({
           id: doc.key,
           title: doc.title || "Unknown Title",
@@ -81,7 +106,7 @@ export function SearchResultsPage() {
           year: doc.first_publish_year || 0,
           coverUrl: doc.cover_i
             ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg`
-            : placeholderBook,
+            : "/placeholder-book.png",
           description: "",
           subjects: doc.subject?.slice(0, 3) || [],
           language: doc.language?.[0] || "en",
@@ -92,7 +117,15 @@ export function SearchResultsPage() {
         }));
 
         setBooks(transformedBooks);
-        setTotalResults(results.numFound);
+
+        // Use filtered count if we filtered by year, otherwise use API count
+        if (yearFrom || yearTo) {
+          // If year filtering was applied, use the filtered count
+          setTotalResults(filteredDocs.length);
+        } else {
+          // No year filtering, use API's total count
+          setTotalResults(results.numFound);
+        }
       } catch (err) {
         console.error("Search error:", err);
         setError(
@@ -116,12 +149,14 @@ export function SearchResultsPage() {
     const title = searchParams.get("title");
     const author = searchParams.get("author");
     const subject = searchParams.get("subject");
+    const language = searchParams.get("language");
     const yearFrom = searchParams.get("yearFrom");
     const yearTo = searchParams.get("yearTo");
 
     if (title) parts.push(`Title: "${title}"`);
     if (author) parts.push(`Author: "${author}"`);
     if (subject) parts.push(`Subject: "${subject}"`);
+    if (language) parts.push(`Language: ${language}`);
     if (yearFrom || yearTo) {
       const range =
         yearFrom && yearTo
@@ -220,7 +255,7 @@ export function SearchResultsPage() {
           <p className="text-muted-foreground">
             {totalResults === 0
               ? "No books found matching your criteria"
-              : `Found ${totalResults.toLocaleString()} ${totalResults === 1 ? "book" : "books"} - Page ${currentPage} of ${totalPages}`}
+              : `Found ${totalResults.toLocaleString()} ${totalResults === 1 ? "book" : "books"}${totalPages > 1 ? ` - Page ${currentPage} of ${totalPages}` : ""}`}
           </p>
         </div>
 

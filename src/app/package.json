@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite"
+    "dev": "vite",
+    "cypress": "npx cypress run --record"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",
@@ -45,12 +46,14 @@
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "cmdk": "1.1.1",
+    "cypress": "^15.9.0",
     "date-fns": "3.6.0",
     "embla-carousel-react": "8.6.0",
     "input-otp": "1.4.2",
     "lucide-react": "0.487.0",
     "motion": "12.23.24",
     "next-themes": "0.4.6",
+    "nyc": "^17.1.0",
     "react-day-picker": "8.10.1",
     "react-dnd": "16.0.1",
     "react-dnd-html5-backend": "16.0.1",
@@ -68,9 +71,22 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "4.1.12",
+    "@types/chai": "^5.2.3",
+    "@types/jest": "^30.0.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^25.2.0",
     "@types/react-dom": "^19.2.3",
+    "@types/sinon": "^21.0.0",
+    "@types/sinon-chai": "^4.0.0",
     "@vitejs/plugin-react": "4.7.0",
+    "axios-mock-adapter": "^2.1.0",
+    "chai": "^6.2.2",
+    "mocha": "^11.7.5",
+    "sinon": "^21.0.1",
+    "sinon-chai": "^4.0.1",
     "tailwindcss": "^4.1.12",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
     "vite": "6.3.5"
   },
   "peerDependencies": {
