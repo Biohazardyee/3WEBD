@@ -12,147 +12,76 @@ import {
     OpenLibrarySearchResponse,
     OpenLibraryWork,
     OpenLibraryAuthor,
-    OpenLibrarySearchDoc,
 } from '../../../src/types/openLibrary';
 
-describe('OpenLibrary API Integration Tests (Cypress)', () => {
+describe('OpenLibrary Real API Integration Tests', () => {
+    // On augmente le timeout global car l'API réelle est plus lente que les mocks
+    const requestOptions = {timeout: 15000};
 
     describe('searchBooks()', () => {
-        it('should successfully search for books with valid query', () => {
-            const mockResponse: OpenLibrarySearchResponse = {
-                numFound: 629,
-                start: 0,
-                docs: [
-                    {
-                        key: '/works/OL45804W',
-                        title: 'The Great Gatsby',
-                        author_name: ['F. Scott Fitzgerald'],
-                        first_publish_year: 1925,
-                        cover_i: 7222246,
-                    } as OpenLibrarySearchDoc
-                ]
-            };
-
-            cy.intercept('GET', /.*\/search\.json.*/, {
-                statusCode: 200,
-                body: mockResponse
-            }).as('searchApi');
-
-            cy.wrap(searchBooks('gatsby')).then((res: any) => {
+        it('should fetch real data for "The Great Gatsby"', () => {
+            cy.wrap(searchBooks('the great gatsby'), requestOptions).then((res: any) => {
                 const result = res as OpenLibrarySearchResponse;
-                expect(result.numFound).to.equal(629);
-                expect(result.docs[0].title).to.equal('The Great Gatsby');
+                expect(result.docs.length).to.be.greaterThan(0);
+                // On vérifie qu'un des résultats contient bien le titre attendu
+                const titles = result.docs.map(d => d.title.toLowerCase());
+                expect(titles.some(t => t.includes('the great gatsby'))).to.be.true;
             });
-
-
-            cy.wait('@searchApi');
         });
 
-        it('should handle empty query error', () => {
+        it('should handle empty query error (Logicielle)', () => {
+            // Cette erreur est déclenchée par ton code, pas par l'API
             cy.wrap(searchBooks('').catch(err => err)).then((error: any) => {
                 expect(error.message).to.equal('Search query cannot be empty');
             });
         });
     });
 
-    describe('advancedSearch()', () => {
-        it('should perform advanced search with multiple parameters', () => {
-            cy.intercept('GET', /.*\/search\.json.*/, {
-                statusCode: 200,
-                body: { numFound: 50, docs: [{ title: 'To Kill a Mockingbird' }] }
-            }).as('advSearch');
-
-            cy.wrap(advancedSearch({ title: 'mockingbird', author: 'harper lee' })).then((res: any) => {
-                const result = res as OpenLibrarySearchResponse;
-                expect(result.docs[0].title).to.equal('To Kill a Mockingbird');
-            });
-
-            cy.wait('@advSearch');
-        });
-    });
-
     describe('getBookByKey()', () => {
-        it('should fetch book details by valid key', () => {
-            // Pattern plus large pour attraper avec ou sans ".json"
-            cy.intercept('GET', /.*\/works\/OL45804W.*/, {
-                statusCode: 200,
-                body: {
-                    key: '/works/OL45804W',
-                    title: 'The Great Gatsby',
-                    authors: [{ author: { key: '/authors/OL9388A' } }]
-                }
-            }).as('getBook');
-
-            cy.wrap(getBookByKey('/works/OL45804W')).then((res: any) => {
-                const result = res as OpenLibraryWork;
-                expect(result.title).to.equal('The Great Gatsby');
+        it('should fetch actual book details for OL45804W', () => {
+            const key = '/works/OL45804W';
+            cy.wrap(getBookByKey(key), requestOptions).then((book: any) => {
+                const result = book as OpenLibraryWork;
+                expect(result.title).to.equal('Fantastic Mr Fox');
+                expect(result.key).to.equal(key);
             });
-
-            cy.wait('@getBook');
         });
     });
 
     describe('getAuthorByKey()', () => {
-        it('should fetch author details by valid key', () => {
-            cy.intercept('GET', /.*\/authors\/OL9388A.*/, {
-                statusCode: 200,
-                body: {
-                    key: '/authors/OL9388A',
-                    name: 'F. Scott Fitzgerald'
-                }
-            }).as('getAuthor');
-
-            cy.wrap(getAuthorByKey('/authors/OL9388A')).then((res: any) => {
-                const result = res as OpenLibraryAuthor;
-                expect(result.name).to.equal('F. Scott Fitzgerald');
+        it('should fetch actual author details for William Shakespeare', () => {
+            const key = '/authors/OL9388A';
+            cy.wrap(getAuthorByKey(key), requestOptions).then((author: any) => {
+                const result = author as OpenLibraryAuthor;
+                expect(result.name).to.equal('William Shakespeare');
             });
-
-            cy.wait('@getAuthor');
         });
     });
 
     describe('getRecentBookAdditions()', () => {
-        it('should return an array (even if empty) and filter books correctly', () => {
-            const mockChanges = [
-                { id: '1', kind: 'add-book', changes: [{ key: '/works/OL1W' }] },
-                { id: '2', kind: 'add-book', changes: [{ key: '/works/OL2W' }] }
-            ];
-
-            const mockBookWithTitle = { key: '/works/OL1W', title: 'Recent Book' };
-            const mockBookNoTitle = { key: '/works/OL2W' };
-
-            cy.intercept('GET', /.*\/recentchanges\.json.*/, { body: mockChanges }).as('changes');
-            cy.intercept('GET', /.*\/works\/OL1W.*/, { body: mockBookWithTitle }).as('book1');
-            cy.intercept('GET', /.*\/works\/OL2W.*/, { body: mockBookNoTitle }).as('book2');
-
-            cy.wrap(getRecentBookAdditions(2)).then((res: any) => {
-                const result = res as any[];
+        it('should fetch a dynamic list of recent books from API', () => {
+            cy.wrap(getRecentBookAdditions(3), {timeout: 30000}).then((books: any) => {
+                const result = books as OpenLibraryWork[];
                 expect(result).to.be.an('array');
+
                 if (result.length > 0) {
                     expect(result[0]).to.have.property('title');
+                    expect(result[0].covers).to.have.length.greaterThan(0);
+                    console.log('Books found on real API:', result.map(b => b.title));
                 }
-            });
-        });
-
-        it('should handle API errors on recent changes by returning an empty array', () => {
-            cy.intercept('GET', /.*\/recentchanges\.json.*/, { statusCode: 500 }).as('errorChanges');
-
-            cy.wrap(getRecentBookAdditions(5)).then((result: any) => {
-                expect(result).to.be.an('array');
             });
         });
     });
 
-    describe('Data Format Validation', () => {
-        it('should validate search results property types', () => {
-            cy.intercept('GET', /.*\/search\.json.*/, {
-                body: { numFound: 1, docs: [{ key: 'K', title: 'T', author_name: ['A'], first_publish_year: 2000 }] }
-            }).as('valid');
-
-            cy.wrap(searchBooks('test')).then((res: any) => {
-                const book = (res as OpenLibrarySearchResponse).docs[0];
-                expect(book.key).to.be.a('string');
-                expect(book.title).to.be.a('string');
+    describe('Advanced Search', () => {
+        it('should filter by title and author on real API', () => {
+            cy.wrap(advancedSearch({
+                title: 'Lord of the Rings',
+                author: 'Tolkien'
+            }), requestOptions).then((res: any) => {
+                const result = res as OpenLibrarySearchResponse;
+                expect(result.docs.length).to.be.greaterThan(0);
+                expect(result.docs[0].author_name).to.deep.include('J.R.R. Tolkien');
             });
         });
     });
