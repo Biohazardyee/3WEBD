@@ -5,6 +5,7 @@ import { LoadingSpinner } from "../components/LoadingSpinner";
 import { searchBooks, advancedSearch } from "../api/openLibrary";
 import type {Book, OpenLibrarySearchDoc} from "../types/openLibrary";
 import { AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import placeholderBook from "../assets/placeholder-book.png";
 
 export function SearchResultsPage() {
   const [searchParams] = useSearchParams();
@@ -17,7 +18,7 @@ export function SearchResultsPage() {
   const resultsPerPage = 20;
 
   useEffect(() => {
-    const fetchBooks = async () => {
+    const fetchBooks = async (): Promise<void> => {
       setLoading(true);
       setError(null);
 
@@ -26,35 +27,28 @@ export function SearchResultsPage() {
         const title: string | null = searchParams.get("title");
         const author: string | null = searchParams.get("author");
         const subject: string | null = searchParams.get("subject");
-        const language: string | null = searchParams.get("language");
-        const yearFrom: string | null = searchParams.get("yearFrom");
-        const yearTo: string | null = searchParams.get("yearTo");
         const page: number = parseInt(searchParams.get("page") || "1");
 
         setCurrentPage(page);
 
         let results;
-        let isYearOnlySearch = false;
 
         if (
           !quickQuery &&
           !title &&
           !author &&
-          !subject &&
-          (yearFrom || yearTo)
+          !subject
         ) {
-          isYearOnlySearch = true;
 
           results = await searchBooks("*", page, 100);
         } else if (quickQuery) {
           results = await searchBooks(quickQuery, page, resultsPerPage);
-        } else if (title || author || subject || language) {
+        } else if (title || author || subject) {
           const params: Record<string, string> = {};
 
           if (title) params.title = title;
           if (author) params.author = author;
           if (subject) params.subject = subject;
-          if (language) params.language = language;
 
           results = await advancedSearch(params, page, resultsPerPage);
         } else {
@@ -72,28 +66,6 @@ export function SearchResultsPage() {
         }
 
         let filteredDocs: OpenLibrarySearchDoc[] = results.docs;
-        if (yearFrom || yearTo) {
-          const fromYear = yearFrom ? parseInt(yearFrom) : 0;
-          const toYear = yearTo ? parseInt(yearTo) : 9999;
-
-          filteredDocs = results.docs.filter((doc: any) => {
-            const bookYear = doc.first_publish_year;
-            if (!bookYear) return false;
-            return bookYear >= fromYear && bookYear <= toYear;
-          });
-        }
-
-        if (filteredDocs.length === 0 && isYearOnlySearch && page === 1) {
-          results = await searchBooks("the", 1, 100);
-
-          const fromYear: number = yearFrom ? parseInt(yearFrom) : 0;
-          const toYear: number = yearTo ? parseInt(yearTo) : 9999;
-
-          filteredDocs = results.docs.filter((doc: OpenLibrarySearchDoc) => {
-            const bookYear: number | undefined = doc.first_publish_year;
-            return bookYear && bookYear >= fromYear && bookYear <= toYear;
-          });
-        }
 
         const transformedBooks: Book[] = filteredDocs.map((doc: OpenLibrarySearchDoc) => ({
           id: doc.key,
@@ -102,7 +74,7 @@ export function SearchResultsPage() {
           year: doc.first_publish_year || 0,
           coverUrl: doc.cover_i
             ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg`
-            : "/placeholder-book.png",
+            : placeholderBook,
           description: "",
           subjects: doc.subject?.slice(0, 3) || [],
           language: doc.language?.[0] || "en",
@@ -113,12 +85,7 @@ export function SearchResultsPage() {
         }));
 
         setBooks(transformedBooks);
-        
-        if (yearFrom || yearTo) {
-          setTotalResults(filteredDocs.length);
-        } else {
-          setTotalResults(results.numFound);
-        }
+
       } catch (err) {
         console.error("Search error:", err);
         setError(
@@ -135,30 +102,17 @@ export function SearchResultsPage() {
   }, [searchParams]);
 
   const getSearchSummary = (): string => {
-    const quickQuery = searchParams.get("q");
+    const quickQuery: string | null = searchParams.get("q");
     if (quickQuery) return `Results for "${quickQuery}"`;
 
     const parts: string[] = [];
     const title: string | null = searchParams.get("title");
     const author: string | null = searchParams.get("author");
     const subject: string | null = searchParams.get("subject");
-    const language: string | null = searchParams.get("language");
-    const yearFrom: string | null = searchParams.get("yearFrom");
-    const yearTo: string | null = searchParams.get("yearTo");
 
     if (title) parts.push(`Title: "${title}"`);
     if (author) parts.push(`Author: "${author}"`);
     if (subject) parts.push(`Subject: "${subject}"`);
-    if (language) parts.push(`Language: ${language}`);
-    if (yearFrom || yearTo) {
-      const range: string =
-        yearFrom && yearTo
-          ? `${yearFrom}-${yearTo}`
-          : yearFrom
-            ? `from ${yearFrom}`
-            : `until ${yearTo}`;
-      parts.push(`Years: ${range}`);
-    }
 
     return parts.length > 0
       ? `Search filters: ${parts.join(", ")}`
@@ -191,10 +145,10 @@ export function SearchResultsPage() {
         pages.push("...");
       }
 
-      const start = Math.max(2, currentPage - 1);
-      const end = Math.min(totalPages - 1, currentPage + 1);
+      const start: number = Math.max(2, currentPage - 1);
+      const end: number = Math.min(totalPages - 1, currentPage + 1);
 
-      for (let i = start; i <= end; i++) {
+      for (let i: number = start; i <= end; i++) {
         pages.push(i);
       }
 
@@ -265,7 +219,7 @@ export function SearchResultsPage() {
               <div className="mt-12 flex items-center justify-center gap-2">
                 {/* Previous button */}
                 <button
-                  onClick={() => handlePageChange(currentPage - 1)}
+                  onClick={(): void => handlePageChange(currentPage - 1)}
                   disabled={!hasPrevPage}
                   className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
                     hasPrevPage

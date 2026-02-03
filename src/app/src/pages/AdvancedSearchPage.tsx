@@ -7,10 +7,7 @@ export function AdvancedSearchPage() {
   const [filters, setFilters] = useState({
     title: "",
     author: "",
-    yearFrom: "",
-    yearTo: "",
     subject: "",
-    language: "all",
   });
   const [error, setError] = useState("");
 
@@ -18,40 +15,11 @@ export function AdvancedSearchPage() {
     const hasAnyFilter: string | boolean =
       filters.title.trim() ||
       filters.author.trim() ||
-      filters.subject.trim() ||
-      filters.yearFrom ||
-      filters.yearTo ||
-      (filters.language && filters.language !== "all");
+      filters.subject.trim()
 
     if (!hasAnyFilter) {
       setError("Please fill in at least one search field");
       return false;
-    }
-
-    if (filters.yearFrom && filters.yearTo) {
-      const from = parseInt(filters.yearFrom);
-      const to = parseInt(filters.yearTo);
-
-      if (from > to) {
-        setError('Year "From" cannot be greater than year "To"');
-        return false;
-      }
-    }
-
-    const currentYear = new Date().getFullYear();
-    if (filters.yearFrom) {
-      const from = parseInt(filters.yearFrom);
-      if (from < 1000 || from > currentYear) {
-        setError(`Year "From" must be between 1000 and ${currentYear}`);
-        return false;
-      }
-    }
-    if (filters.yearTo) {
-      const to = parseInt(filters.yearTo);
-      if (to < 1000 || to > currentYear) {
-        setError(`Year "To" must be between 1000 and ${currentYear}`);
-        return false;
-      }
     }
 
     setError("");
@@ -79,17 +47,6 @@ export function AdvancedSearchPage() {
       params.append("subject", filters.subject.trim());
     }
 
-    if (filters.language && filters.language !== "all") {
-      params.append("language", filters.language);
-    }
-
-    if (filters.yearFrom) {
-      params.append("yearFrom", filters.yearFrom);
-    }
-    if (filters.yearTo) {
-      params.append("yearTo", filters.yearTo);
-    }
-
     navigate(`/search?${params.toString()}`);
   };
 
@@ -97,10 +54,7 @@ export function AdvancedSearchPage() {
     setFilters({
       title: "",
       author: "",
-      yearFrom: "",
-      yearTo: "",
       subject: "",
-      language: "all",
     });
     setError("");
   };
@@ -167,50 +121,6 @@ export function AdvancedSearchPage() {
             </p>
           </div>
 
-          {/* Publication Year Range */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="yearFrom" className="block mb-2 font-medium">
-                Publication Year From
-              </label>
-              <input
-                type="number"
-                id="yearFrom"
-                value={filters.yearFrom}
-                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                  setFilters({ ...filters, yearFrom: e.target.value })
-                }
-                placeholder="e.g. 1900"
-                min="1000"
-                max={new Date().getFullYear()}
-                className="w-full px-4 py-3 border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
-              />
-            </div>
-            <div>
-              <label htmlFor="yearTo" className="block mb-2 font-medium">
-                To
-              </label>
-              <input
-                type="number"
-                id="yearTo"
-                value={filters.yearTo}
-                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                  setFilters({ ...filters, yearTo: e.target.value })
-                }
-                placeholder={`e.g. ${new Date().getFullYear()}`}
-                min="1000"
-                max={new Date().getFullYear()}
-                className="w-full px-4 py-3 border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
-              />
-            </div>
-            <div className="col-span-2">
-              <p className="text-xs text-muted-foreground">
-                Filter books by publication year range (you can use only one
-                field or both)
-              </p>
-            </div>
-          </div>
-
           {/* Subject/Tags */}
           <div>
             <label htmlFor="subject" className="block mb-2 font-medium">
@@ -228,36 +138,6 @@ export function AdvancedSearchPage() {
             />
             <p className="mt-1 text-xs text-muted-foreground">
               Search by book category or subject
-            </p>
-          </div>
-
-          {/* Language */}
-          <div>
-            <label htmlFor="language" className="block mb-2 font-medium">
-              Language
-            </label>
-            <select
-              id="language"
-              value={filters.language}
-              onChange={(e: ChangeEvent<HTMLSelectElement>) =>
-                setFilters({ ...filters, language: e.target.value })
-              }
-              className="w-full px-4 py-3 border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
-            >
-              <option value="all">All Languages</option>
-              <option value="eng">English</option>
-              <option value="spa">Spanish</option>
-              <option value="fre">French</option>
-              <option value="ger">German</option>
-              <option value="ita">Italian</option>
-              <option value="por">Portuguese</option>
-              <option value="chi">Chinese</option>
-              <option value="jpn">Japanese</option>
-              <option value="rus">Russian</option>
-              <option value="ara">Arabic</option>
-            </select>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Filter by language (uses ISO 639-2 language codes)
             </p>
           </div>
 
