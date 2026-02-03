@@ -184,6 +184,6 @@ Cette application utilise l'**API Open Library** pour récupérer les données d
 
 <div align="center">
 
-[⬆ Retour en Haut](#-city-library--application-de-recherche-de-livres)
+[⬆ Retour en Haut](#-independant-library--application-de-recherche-de-livres)
 
 </div>
