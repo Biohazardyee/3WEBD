@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import {useState, useEffect, type SyntheticEvent} from "react";
 import { useParams, Link } from "react-router-dom";
 import { getBookByKey, getAuthorByKey } from "../api/openLibrary";
 import {
@@ -41,7 +41,7 @@ export function BookDetailPage() {
   const [wikipediaLoading, setWikipediaLoading] = useState(true);
 
   useEffect(() => {
-    const fetchBookDetails = async () => {
+    const fetchBookDetails = async (): Promise<void> => {
       if (!bookPath) {
         setError("Invalid book ID");
         setLoading(false);
@@ -52,13 +52,13 @@ export function BookDetailPage() {
       setError(null);
 
       try {
-        const key = bookPath.startsWith("/") ? bookPath : `/${bookPath}`;
+        const key: string = bookPath.startsWith("/") ? bookPath : `/${bookPath}`;
 
         if (!key.match(/^\/works\/OL\d+W$/)) {
           throw new Error("Invalid book ID format");
         }
 
-        const bookData = await getBookByKey(key);
+        const bookData: OpenLibraryWork = await getBookByKey(key);
 
         if (!bookData) {
           throw new Error("Book not found");
@@ -67,13 +67,13 @@ export function BookDetailPage() {
         setBook(bookData);
 
         if (bookData.created?.value) {
-          const year = new Date(bookData.created.value).getFullYear();
+          const year: number = new Date(bookData.created.value).getFullYear();
           setPublicationYear(year);
         }
 
         let authorData: OpenLibraryAuthor | null = null;
         if (bookData.authors && bookData.authors.length > 0) {
-          const authorKey = bookData.authors[0].author.key;
+          const authorKey: string = bookData.authors[0].author.key;
           try {
             authorData = await getAuthorByKey(authorKey);
             setAuthor(authorData);
@@ -84,15 +84,15 @@ export function BookDetailPage() {
 
         setWikipediaLoading(true);
         try {
-          const wikiBook = await fetchWikipediaDataForBook(
+          const wikiBook: WikipediaData | null = await fetchWikipediaDataForBook(
             bookData.title,
             authorData?.name,
           );
           setWikipediaBook(wikiBook);
 
           if (authorData?.name) {
-            const wikiAuthor = await fetchWikipediaDataForAuthor(
-              authorData.name,
+            const wikiAuthor: WikipediaData | null = await fetchWikipediaDataForAuthor(
+              authorData?.name,
             );
             setWikipediaAuthor(wikiAuthor);
           }
@@ -187,16 +187,16 @@ export function BookDetailPage() {
     );
   }
 
-  const description =
+  const description: string =
     typeof book.description === "string"
       ? book.description
       : book.description?.value || "No description available for this book.";
 
-  const coverUrl = book.covers?.[0]
+  const coverUrl: string = book.covers?.[0]
     ? `https://covers.openlibrary.org/b/id/${book.covers[0]}-L.jpg`
     : placeHolderBook;
 
-  const authorKey = book.authors?.[0]?.author?.key;
+  const authorKey: string | undefined = book.authors?.[0]?.author?.key;
   const authorName = author?.name || "Unknown Author";
 
   return (
@@ -220,7 +220,7 @@ export function BookDetailPage() {
                   src={coverUrl}
                   alt={`Cover of ${book.title}`}
                   className="w-full h-full object-cover"
-                  onError={(e) => {
+                  onError={(e: SyntheticEvent<HTMLImageElement, Event>) => {
                     e.currentTarget.src = placeHolderBook;
                   }}
                 />

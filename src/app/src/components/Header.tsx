@@ -1,8 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
 import { Search, BookOpen, Loader } from "lucide-react";
-import { useState } from "react";
+import {type ChangeEvent, useState} from "react";
 import { useNavigate } from "react-router-dom";
 import { searchBooks } from "../api/openLibrary";
+import type {OpenLibrarySearchResponse} from "../types/openLibrary.ts";
 
 export function Header() {
   const location = useLocation();
@@ -10,7 +11,7 @@ export function Header() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
 
-  const handleQuickSearch = async (e: React.FormEvent) => {
+  const handleQuickSearch = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     if (!searchQuery.trim()) {
       return;
@@ -19,7 +20,7 @@ export function Header() {
     setIsSearching(true);
 
     try {
-      const results = await searchBooks(searchQuery.trim());
+      const results: OpenLibrarySearchResponse = await searchBooks(searchQuery.trim());
 
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`, {
         state: { results },
@@ -64,7 +65,7 @@ export function Header() {
               <input
                 type="text"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e: ChangeEvent<HTMLInputElement>)=> setSearchQuery(e.target.value)}
                 placeholder="Quick search for books..."
                 disabled={isSearching}
                 className="w-full pl-12 pr-4 py-3 border border-input rounded-lg bg-input-background focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
@@ -108,7 +109,7 @@ export function Header() {
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
               placeholder="Quick search for books..."
               disabled={isSearching}
               className="w-full pl-12 pr-4 py-3 border border-input rounded-lg bg-input-background focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"

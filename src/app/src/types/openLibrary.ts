@@ -1,11 +1,3 @@
-export interface OpenLibraryBook {
-  key: string;
-  title: string;
-  author_name?: string[];
-  first_publish_year?: number;
-  cover_i?: number;
-}
-
 export interface OpenLibraryAuthorRef {
   author: {
     key: string;
@@ -75,6 +67,9 @@ export interface RecentChange {
   timestamp: string;
   comment?: string;
   entities: string[];
+  changes: {
+    key: string;
+  }[];
   author: {
     key: string;
   };

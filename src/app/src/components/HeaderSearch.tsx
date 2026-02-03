@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import {type ChangeEvent, useState} from "react";
 
 const HeaderSearch = () => {
   const [query, setQuery] = useState("");
@@ -20,7 +20,7 @@ const HeaderSearch = () => {
         type="search"
         placeholder="Quick search for books..."
         value={query}
-        onChange={(e) => setQuery(e.target.value)}
+        onChange={(e: ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)}
         className="
           w-full rounded-full border border-gray-200
           py-3 pl-12 pr-4 text-sm

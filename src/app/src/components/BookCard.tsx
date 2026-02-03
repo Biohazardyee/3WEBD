@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import type { Book } from "../data/mockBooks";
+import type { Book } from "../types/openLibrary";
 
 interface BookCardProps {
   book: Book;

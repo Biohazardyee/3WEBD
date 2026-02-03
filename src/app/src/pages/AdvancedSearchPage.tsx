@@ -1,4 +1,4 @@
-import { useState } from "react";
+import {type ChangeEvent, useState} from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, X, AlertCircle } from "lucide-react";
 
@@ -14,8 +14,8 @@ export function AdvancedSearchPage() {
   });
   const [error, setError] = useState("");
 
-  const validateFilters = () => {
-    const hasAnyFilter =
+  const validateFilters = (): boolean => {
+    const hasAnyFilter: string | boolean =
       filters.title.trim() ||
       filters.author.trim() ||
       filters.subject.trim() ||
@@ -58,7 +58,7 @@ export function AdvancedSearchPage() {
     return true;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent): void => {
     e.preventDefault();
 
     if (!validateFilters()) {
@@ -93,7 +93,7 @@ export function AdvancedSearchPage() {
     navigate(`/search?${params.toString()}`);
   };
 
-  const handleReset = () => {
+  const handleReset = (): void => {
     setFilters({
       title: "",
       author: "",
@@ -136,7 +136,7 @@ export function AdvancedSearchPage() {
               type="text"
               id="title"
               value={filters.title}
-              onChange={(e) =>
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 setFilters({ ...filters, title: e.target.value })
               }
               placeholder="Enter book title (e.g., The Great Gatsby)"
@@ -156,7 +156,7 @@ export function AdvancedSearchPage() {
               type="text"
               id="author"
               value={filters.author}
-              onChange={(e) =>
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 setFilters({ ...filters, author: e.target.value })
               }
               placeholder="Enter author name (e.g., F. Scott Fitzgerald)"
@@ -177,7 +177,7 @@ export function AdvancedSearchPage() {
                 type="number"
                 id="yearFrom"
                 value={filters.yearFrom}
-                onChange={(e) =>
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
                   setFilters({ ...filters, yearFrom: e.target.value })
                 }
                 placeholder="e.g. 1900"
@@ -194,7 +194,7 @@ export function AdvancedSearchPage() {
                 type="number"
                 id="yearTo"
                 value={filters.yearTo}
-                onChange={(e) =>
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
                   setFilters({ ...filters, yearTo: e.target.value })
                 }
                 placeholder={`e.g. ${new Date().getFullYear()}`}
@@ -220,7 +220,7 @@ export function AdvancedSearchPage() {
               type="text"
               id="subject"
               value={filters.subject}
-              onChange={(e) =>
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 setFilters({ ...filters, subject: e.target.value })
               }
               placeholder="e.g. Fiction, Science, History, Romance"
@@ -239,7 +239,7 @@ export function AdvancedSearchPage() {
             <select
               id="language"
               value={filters.language}
-              onChange={(e) =>
+              onChange={(e: ChangeEvent<HTMLSelectElement>) =>
                 setFilters({ ...filters, language: e.target.value })
               }
               className="w-full px-4 py-3 border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"

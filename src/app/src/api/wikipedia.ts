@@ -55,7 +55,7 @@ export const fetchWikipediaDataForBook = async (
 ): Promise<WikipediaData | null> => {
   if (!bookTitle) return null;
 
-  let result = await fetchWikipediaData(bookTitle);
+  let result: WikipediaData | null = await fetchWikipediaData(bookTitle);
   if (result) return result;
 
   result = await fetchWikipediaData(`${bookTitle} (novel)`);
@@ -77,7 +77,7 @@ export const fetchWikipediaDataForAuthor = async (
 ): Promise<WikipediaData | null> => {
   if (!authorName) return null;
 
-  const result = await fetchWikipediaData(authorName);
+  const result: WikipediaData | null = await fetchWikipediaData(authorName);
   
   if (!result) {
     console.log(`Wikipedia: No page found for author "${authorName}"`);

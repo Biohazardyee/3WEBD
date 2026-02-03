@@ -1,7 +1,7 @@
 import axios from "axios";
 import type {
     OpenLibraryWork,
-    OpenLibraryAuthor, OpenLibrarySearchResponse,
+    OpenLibraryAuthor, OpenLibrarySearchResponse, RecentChange,
 } from "../types/openLibrary";
 
 const api = axios.create({
@@ -64,7 +64,7 @@ export async function advancedSearch(
 
     const query = new URLSearchParams(queryParams);
 
-    const response = await fetch(
+    const response: Response = await fetch(
         `https://openlibrary.org/search.json?${query.toString()}`,
     );
 
@@ -95,24 +95,22 @@ export const getAuthorByKey = async (
     return data;
 };
 
-export const getRecentBookAdditions = async (limit = 6) => {
+export const getRecentBookAdditions = async (limit = 6): Promise<OpenLibraryWork[]> => {
     try {
-        const { data } = await api.get("/recentchanges.json", {
+        const { data } = await api.get<RecentChange[]>("/recentchanges.json", {
             params: { limit: 100 },
         });
 
-        const changes = data as any[];
-
-        const bookChanges = changes.filter((change) => {
+        const bookChanges: RecentChange[] = data.filter((change: RecentChange) => {
             return (
-                change.changes &&
-                change.changes.some((c: any) => c.key && c.key.startsWith("/works/"))
+                change &&
+                change.changes.some((c: { key: string }): boolean | "" => c.key && c.key.startsWith("/works/"))
             );
         });
 
         const workKeys = new Set<string>();
-        bookChanges.forEach((change) => {
-            change.changes?.forEach((c: any) => {
+        bookChanges.forEach((change: RecentChange): void => {
+            change.changes?.forEach((c: { key: string }): void => {
                 if (c.key && c.key.startsWith("/works/")) {
                     workKeys.add(c.key);
                 }
@@ -120,15 +118,14 @@ export const getRecentBookAdditions = async (limit = 6) => {
         });
 
         const books: OpenLibraryWork[] = [];
-        const keysArray = Array.from(workKeys);
+        const keysArray: string[] = Array.from(workKeys);
 
         for (const key of keysArray) {
             if (books.length >= limit) break;
 
             try {
-                const book = await getBookByKey(key);
+                const book: OpenLibraryWork = await getBookByKey(key);
 
-                // Only add books that have titles and covers
                 if (book.title && book.covers && book.covers.length > 0) {
                     books.push(book);
                     console.log(`Added book: ${book.title}`);
@@ -140,18 +137,17 @@ export const getRecentBookAdditions = async (limit = 6) => {
 
         if (books.length < limit) {
 
-            const { data: moreData } = await api.get("/recentchanges.json", {
+            const { data } = await api.get<RecentChange[]>("/recentchanges.json", {
                 params: { limit: 500 },
             });
 
-            const moreChanges = moreData as any[];
-            const moreBookChanges = moreChanges.filter((change) =>
-                change.changes?.some((c: any) => c.key && c.key.startsWith("/works/")),
+            const moreBookChanges: RecentChange[] = data.filter((change: RecentChange) =>
+                change.changes?.some((c: { key: string }): boolean | "" => c.key && c.key.startsWith("/works/")),
             );
 
             const moreWorkKeys = new Set<string>();
-            moreBookChanges.forEach((change) => {
-                change.changes?.forEach((c: any) => {
+            moreBookChanges.forEach((change: RecentChange): void => {
+                change.changes?.forEach((c: { key: string }): void => {
                     if (c.key && c.key.startsWith("/works/") && !workKeys.has(c.key)) {
                         moreWorkKeys.add(c.key);
                     }
@@ -162,7 +158,7 @@ export const getRecentBookAdditions = async (limit = 6) => {
                 if (books.length >= limit) break;
 
                 try {
-                    const book = await getBookByKey(key);
+                    const book: OpenLibraryWork = await getBookByKey(key);
                     if (book.title && book.covers && book.covers.length > 0) {
                         books.push(book);
                     }

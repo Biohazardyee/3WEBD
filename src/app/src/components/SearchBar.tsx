@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import {useState, type FormEvent, type ChangeEvent} from "react";
 import { useNavigate } from "react-router-dom";
 import * as React from "react";
 import "./SearchBar.css";
@@ -21,7 +21,7 @@ const SearchBar: React.FC = () => {
         className="search-input"
         value={query}
         placeholder="Search books, authors..."
-        onChange={(e) => setQuery(e.target.value)}
+        onChange={(e: ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)}
       />
       <button className="search-button" type="submit"></button>
     </form>

@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import {useState, useEffect, type ChangeEvent} from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, TrendingUp } from "lucide-react";
 import { getRecentBookAdditions, getAuthorByKey } from "../api/openLibrary";
-import type { OpenLibraryWork } from "../types/openLibrary";
+import type {OpenLibraryAuthor, OpenLibraryWork} from "../types/openLibrary";
 import { BookCard } from "../components/BookCard";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import placeHolderBook from "../assets/placeholder-book.png";
@@ -15,10 +15,10 @@ export function HomePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchRecentBooks = async () => {
+    const fetchRecentBooks = async (): Promise<void> => {
       setLoading(true);
       try {
-        const books = await getRecentBookAdditions(6);
+        const books: OpenLibraryWork[] = await getRecentBookAdditions(6);
         setRecentBooks(books);
 
         const authors: Record<string, string> = {};
@@ -27,7 +27,7 @@ export function HomePage() {
           if (book.authors && book.authors.length > 0) {
             const authorKey = book.authors[0].author.key;
             try {
-              const author = await getAuthorByKey(authorKey);
+              const author: OpenLibraryAuthor = await getAuthorByKey(authorKey);
               authors[book.key] = author.name;
             } catch (err) {
               console.error(`Failed to fetch author for ${authorKey}:`, err);
@@ -49,14 +49,14 @@ export function HomePage() {
     fetchRecentBooks();
   }, []);
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = (e: React.FormEvent): void => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 
-  const transformedBooks = recentBooks.map((book) => ({
+  const transformedBooks = recentBooks.map((book: OpenLibraryWork) => ({
     id: book.key,
     title: book.title,
     author: authorNames[book.key] || "Loading...",
@@ -95,7 +95,7 @@ export function HomePage() {
                 <input
                   type="text"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
                   placeholder="Search by title, author, or subject..."
                   className="w-full pl-16 pr-6 py-5 text-lg border-2 border-input rounded-2xl bg-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent shadow-lg transition-shadow"
                 />

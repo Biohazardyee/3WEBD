@@ -1,5 +1,6 @@
 import { ExternalLink, BookOpen, AlertCircle } from "lucide-react";
 import type { WikipediaCardProps } from "../types/wikipedia";
+import type {SyntheticEvent} from "react";
 
 export function WikipediaCard({ data, loading = false, type = "book" }: WikipediaCardProps) {
   if (loading) {
@@ -59,7 +60,7 @@ export function WikipediaCard({ data, loading = false, type = "book" }: Wikipedi
                 src={data.image}
                 alt={data.title || "Wikipedia"}
                 className="w-full h-full object-cover"
-                onError={(e) => {
+                onError={(e: SyntheticEvent<HTMLElement, Event>) => {
                   e.currentTarget.style.display = 'none';
                 }}
               />

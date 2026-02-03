@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { BookCard } from "../components/BookCard";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import { searchBooks, advancedSearch } from "../api/openLibrary";
-import type { Book } from "../types/openLibrary";
+import type {Book, OpenLibrarySearchDoc} from "../types/openLibrary";
 import { AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
 
 export function SearchResultsPage() {
@@ -22,14 +22,14 @@ export function SearchResultsPage() {
       setError(null);
 
       try {
-        const quickQuery = searchParams.get("q");
-        const title = searchParams.get("title");
-        const author = searchParams.get("author");
-        const subject = searchParams.get("subject");
-        const language = searchParams.get("language");
-        const yearFrom = searchParams.get("yearFrom");
-        const yearTo = searchParams.get("yearTo");
-        const page = parseInt(searchParams.get("page") || "1");
+        const quickQuery: string | null = searchParams.get("q");
+        const title: string | null = searchParams.get("title");
+        const author: string | null = searchParams.get("author");
+        const subject: string | null = searchParams.get("subject");
+        const language: string | null = searchParams.get("language");
+        const yearFrom: string | null = searchParams.get("yearFrom");
+        const yearTo: string | null = searchParams.get("yearTo");
+        const page: number = parseInt(searchParams.get("page") || "1");
 
         setCurrentPage(page);
 
@@ -71,8 +71,7 @@ export function SearchResultsPage() {
           return;
         }
 
-        // Filter by year range if specified
-        let filteredDocs = results.docs;
+        let filteredDocs: OpenLibrarySearchDoc[] = results.docs;
         if (yearFrom || yearTo) {
           const fromYear = yearFrom ? parseInt(yearFrom) : 0;
           const toYear = yearTo ? parseInt(yearTo) : 9999;
@@ -84,22 +83,19 @@ export function SearchResultsPage() {
           });
         }
 
-        // If we have no results after filtering and it's a year-only search, try getting more
         if (filteredDocs.length === 0 && isYearOnlySearch && page === 1) {
-          console.log("No books found in year range, trying broader search...");
-          results = await searchBooks("the", 1, 100); // Common word to get results
+          results = await searchBooks("the", 1, 100);
 
-          const fromYear = yearFrom ? parseInt(yearFrom) : 0;
-          const toYear = yearTo ? parseInt(yearTo) : 9999;
+          const fromYear: number = yearFrom ? parseInt(yearFrom) : 0;
+          const toYear: number = yearTo ? parseInt(yearTo) : 9999;
 
-          filteredDocs = results.docs.filter((doc: any) => {
-            const bookYear = doc.first_publish_year;
+          filteredDocs = results.docs.filter((doc: OpenLibrarySearchDoc) => {
+            const bookYear: number | undefined = doc.first_publish_year;
             return bookYear && bookYear >= fromYear && bookYear <= toYear;
           });
         }
 
-        // Transform to Book format
-        const transformedBooks: Book[] = filteredDocs.map((doc: any) => ({
+        const transformedBooks: Book[] = filteredDocs.map((doc: OpenLibrarySearchDoc) => ({
           id: doc.key,
           title: doc.title || "Unknown Title",
           author: doc.author_name?.[0] || "Unknown Author",
@@ -117,13 +113,10 @@ export function SearchResultsPage() {
         }));
 
         setBooks(transformedBooks);
-
-        // Use filtered count if we filtered by year, otherwise use API count
+        
         if (yearFrom || yearTo) {
-          // If year filtering was applied, use the filtered count
           setTotalResults(filteredDocs.length);
         } else {
-          // No year filtering, use API's total count
           setTotalResults(results.numFound);
         }
       } catch (err) {
@@ -141,24 +134,24 @@ export function SearchResultsPage() {
     fetchBooks();
   }, [searchParams]);
 
-  const getSearchSummary = () => {
+  const getSearchSummary = (): string => {
     const quickQuery = searchParams.get("q");
     if (quickQuery) return `Results for "${quickQuery}"`;
 
     const parts: string[] = [];
-    const title = searchParams.get("title");
-    const author = searchParams.get("author");
-    const subject = searchParams.get("subject");
-    const language = searchParams.get("language");
-    const yearFrom = searchParams.get("yearFrom");
-    const yearTo = searchParams.get("yearTo");
+    const title: string | null = searchParams.get("title");
+    const author: string | null = searchParams.get("author");
+    const subject: string | null = searchParams.get("subject");
+    const language: string | null = searchParams.get("language");
+    const yearFrom: string | null = searchParams.get("yearFrom");
+    const yearTo: string | null = searchParams.get("yearTo");
 
     if (title) parts.push(`Title: "${title}"`);
     if (author) parts.push(`Author: "${author}"`);
     if (subject) parts.push(`Subject: "${subject}"`);
     if (language) parts.push(`Language: ${language}`);
     if (yearFrom || yearTo) {
-      const range =
+      const range: string =
         yearFrom && yearTo
           ? `${yearFrom}-${yearTo}`
           : yearFrom
@@ -172,18 +165,18 @@ export function SearchResultsPage() {
       : "Search Results";
   };
 
-  const handlePageChange = (newPage: number) => {
+  const handlePageChange = (newPage: number): void => {
     const params = new URLSearchParams(searchParams);
     params.set("page", newPage.toString());
     navigate(`/search?${params.toString()}`);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const totalPages = Math.ceil(totalResults / resultsPerPage);
-  const hasNextPage = currentPage < totalPages;
-  const hasPrevPage = currentPage > 1;
+  const totalPages: number = Math.ceil(totalResults / resultsPerPage);
+  const hasNextPage: boolean = currentPage < totalPages;
+  const hasPrevPage: boolean = currentPage > 1;
 
-  const getPageNumbers = () => {
+  const getPageNumbers = (): (string | number)[] => {
     const pages: (number | string)[] = [];
     const maxVisible = 7;
 
@@ -235,7 +228,7 @@ export function SearchResultsPage() {
               </h3>
               <p className="text-red-800">{error}</p>
               <button
-                onClick={() => window.history.back()}
+                onClick={(): void => window.history.back()}
                 className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
                 Go Back
@@ -262,7 +255,7 @@ export function SearchResultsPage() {
         {books.length > 0 ? (
           <>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-              {books.map((book) => (
+              {books.map((book: Book) => (
                 <BookCard key={book.id} book={book} />
               ))}
             </div>
@@ -286,7 +279,7 @@ export function SearchResultsPage() {
 
                 {/* Page numbers */}
                 <div className="flex gap-2">
-                  {getPageNumbers().map((pageNum, idx) => {
+                  {getPageNumbers().map((pageNum: string | number, idx: number) => {
                     if (pageNum === "...") {
                       return (
                         <span
@@ -301,7 +294,7 @@ export function SearchResultsPage() {
                     return (
                       <button
                         key={pageNum}
-                        onClick={() => handlePageChange(pageNum as number)}
+                        onClick={(): void => handlePageChange(pageNum as number)}
                         className={`px-4 py-2 rounded-lg transition-colors ${
                           currentPage === pageNum
                             ? "bg-primary text-primary-foreground"
@@ -316,7 +309,7 @@ export function SearchResultsPage() {
 
                 {/* Next button */}
                 <button
-                  onClick={() => handlePageChange(currentPage + 1)}
+                  onClick={(): void => handlePageChange(currentPage + 1)}
                   disabled={!hasNextPage}
                   className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
                     hasNextPage
@@ -336,7 +329,7 @@ export function SearchResultsPage() {
               No books found matching your search criteria
             </p>
             <button
-              onClick={() => window.history.back()}
+              onClick={(): void => window.history.back()}
               className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
             >
               Try Different Search

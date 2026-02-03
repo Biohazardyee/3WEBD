@@ -18,7 +18,6 @@ describe('Wikipedia API Integration Tests (Cypress)', () => {
 
     describe('fetchWikipediaData()', () => {
         it('should successfully fetch Wikipedia data for valid title', () => {
-            // Register intercept before calling the function
             cy.intercept('GET', `${API_BASE}/api/rest_v1/page/summary/*`, {
                 statusCode: 200,
                 body: {
@@ -52,7 +51,6 @@ describe('Wikipedia API Integration Tests (Cypress)', () => {
 
                 expect(result.title).to.equal('The Great Gatsby');
                 expect(result.description).to.include('F. Scott Fitzgerald');
-                // Updated check to match actual URL returned
                 expect(result.image).to.include('upload.wikimedia.org');
                 expect(result.url).to.equal('https://en.wikipedia.org/wiki/The_Great_Gatsby');
             });
@@ -67,7 +65,7 @@ describe('Wikipedia API Integration Tests (Cypress)', () => {
         });
 
         it('should return null when page not found', () => {
-            cy.intercept('GET', `${API_BASE}/api/rest_v1/page/summary/*`, { statusCode: 404 }).as('wiki404');
+            cy.intercept('GET', `${API_BASE}/api/rest_v1/page/summary/*`, {statusCode: 404}).as('wiki404');
 
             cy.then(() => fetchWikipediaData('NonExistentBookXYZ123')).then((result: WikipediaData | null) => {
                 expect(result).to.be.null;
@@ -80,14 +78,14 @@ describe('Wikipedia API Integration Tests (Cypress)', () => {
     describe('fetchWikipediaDataForBook()', () => {
         it('should try multiple search strategies for book', () => {
             cy.intercept('GET', `${API_BASE}/api/rest_v1/page/summary/*`, (req) => {
-                if (req.url.includes('The_Great_Gatsby')) req.reply({ statusCode: 404 });
+                if (req.url.includes('The_Great_Gatsby')) req.reply({statusCode: 404});
                 else req.reply({
                     statusCode: 200,
                     body: {
                         type: 'standard',
                         title: 'The Great Gatsby',
                         extract: 'The Great Gatsby is a 1925 novel.',
-                        content_urls: { desktop: { page: 'https://en.wikipedia.org/wiki/The_Great_Gatsby_(novel)' } },
+                        content_urls: {desktop: {page: 'https://en.wikipedia.org/wiki/The_Great_Gatsby_(novel)'}},
                     },
                 });
             }).as('wikiBook');
@@ -116,8 +114,8 @@ describe('Wikipedia API Integration Tests (Cypress)', () => {
                     type: 'standard',
                     title: 'F. Scott Fitzgerald',
                     extract: 'Francis Scott Key Fitzgerald was an American novelist and short story writer.',
-                    thumbnail: { source: 'https://example.com/fitzgerald.jpg', width: 220, height: 280 },
-                    content_urls: { desktop: { page: 'https://en.wikipedia.org/wiki/F._Scott_Fitzgerald' } },
+                    thumbnail: {source: 'https://example.com/fitzgerald.jpg', width: 220, height: 280},
+                    content_urls: {desktop: {page: 'https://en.wikipedia.org/wiki/F._Scott_Fitzgerald'}},
                 },
             }).as('authorCall');
 
