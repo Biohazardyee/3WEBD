@@ -3,10 +3,10 @@
 <div align="center">
 
 
-![Last Commit](https://img.shields.io/github/last-commit/NgK0709/RecipeApp-LaDalle?style=flat-square)
-![Languages](https://img.shields.io/github/languages/count/NgK0709/RecipeApp-LaDalle?style=flat-square)
-![Top Language](https://img.shields.io/github/languages/top/NgK0709/RecipeApp-LaDalle?style=flat-square)
-![Repo Size](https://img.shields.io/github/repo-size/NgK0709/RecipeApp-LaDalle?style=flat-square)
+[![Last Commit](https://img.shields.io/github/last-commit/biohazardyee/3WEBD?style=flat-square)
+![TypeScript](https://img.shields.io/badge/TypeScript-92.3%25-blue?style=flat-square)
+![Languages](https://img.shields.io/github/languages/count/biohazardyee/3WEBD?style=flat-square)
+](https://github.com/NgK0709/RecipeApp-LaDalle)
 
 </div>
 
